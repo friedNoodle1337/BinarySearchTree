@@ -56,5 +56,3 @@ int main()
 	
 	return 0;
 }
-
-//some text
