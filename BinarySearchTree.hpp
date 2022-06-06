@@ -25,6 +25,9 @@ public:
 	int getHeight() const;
 	void iterativeInorderWalk() const;
 	void inorderWalk() const;
+	void breadthWalk() const;
+	bool isSimilarTree(const BinarySearchTree< T >& other);
+	bool isSimilarKeys(const BinarySearchTree< T >& other);
 
 private:
 	struct Node
@@ -109,12 +112,12 @@ private:
 	bool deleteNode(const T& key)
 	{
 		Node* current = iterariveSearchNode(key);
-		Node* parentOfCurrent = current->p_;
-
 		if (current == nullptr)
 		{
 			return false;
 		}
+		Node* parentOfCurrent = current->p_;
+
 
 		if (current->left_ == nullptr && current->right_ == nullptr)
 		{
@@ -140,7 +143,10 @@ private:
 				check = true;
 			}
 			current->key_ = min->key_;
-			min->right_->p_ = min->p_;
+			if (min->right_ != nullptr)
+			{
+				min->right_->p_ = min->p_;
+			}
 			if (check == true)
 			{
 				min->p_->left_ = min->right_;
@@ -224,28 +230,27 @@ private:
 
 	void printTree(std::ostream& out) const
 	{
-		std::queue< Node* > nodes;
-		if (root_->left_ != nullptr)
-		{
-			nodes.push(root_->left_);
-		}
-		if (root_->right_ != nullptr)
-		{
-			nodes.push(root_->right_);
-		}
-
 		if (root_ != nullptr)
 		{
-			Node* current = nullptr;
-			Node* next = root_;
+			std::queue< Node* > nodes;
+
+			nodes.push(root_);
+			if (root_->left_ != nullptr)
+			{
+				nodes.push(root_->left_);
+			}
+			if (root_->right_ != nullptr)
+			{
+				nodes.push(root_->right_);
+			}
+
+			Node* current = nodes.front();
+			nodes.pop();
 			while (nodes.empty() == false)
 			{
-				current = next;
-				next = nodes.front();
-				nodes.pop();
 				out << current->key_;
 				bool check = false;
-				if (next->key_ < current->key_ || next == current->right_)
+				if (nodes.front()->key_ < current->key_ || nodes.front() == current->right_)
 				{
 					out << "\n";
 					check = true;
@@ -254,16 +259,18 @@ private:
 				{
 					out << " ";
 				}
-				if (next->left_ != nullptr)
+				if (nodes.front()->left_ != nullptr)
 				{
-					nodes.push(next->left_);
+					nodes.push(nodes.front()->left_);
 				}
-				if (next->right_ != nullptr)
+				if (nodes.front()->right_ != nullptr)
 				{
-					nodes.push(next->right_);
+					nodes.push(nodes.front()->right_);
 				}
+				current = nodes.front();
+				nodes.pop();
 			}
-			out << next->key_ << "\n";
+			out << current->key_ << "\n";
 		}
 	}
 
@@ -331,6 +338,10 @@ private:
 				current = current->left_;
 			}
 		}
+		if (node != nullptr)
+		{
+			std::cout << "\n";
+		}
 	}
 
 	void inorderWalk(Node* node) const
@@ -341,6 +352,81 @@ private:
 			std::cout << node->key_ << " ";
 			inorderWalk(node->right_);
 		}
+	}
+
+	void breadthWalk(Node* node) const
+	{
+		if (root_ != nullptr)
+		{
+			std::queue< Node* > nodes;
+
+			nodes.push(node);
+
+			while (nodes.empty() == false)
+			{
+				Node* current = nodes.front();
+				nodes.pop();
+				if (current->left_ != nullptr)
+				{
+					nodes.push(current->left_);
+				}
+				if (current->right_ != nullptr)
+				{
+					nodes.push(current->right_);
+				}
+				if (nodes.size() != 0)
+				{
+					std::cout << current->key_ << " ";
+				}
+				else
+				{
+					std::cout << current->key_ << "\n";
+				}
+			}
+		}
+	}
+
+	bool isSimilarTree(Node* node1, Node* node2)
+	{
+		if (node1 == node2 && node1 == nullptr)
+		{
+			return true;
+		}
+		else if ((node1 != node2 && node1 == nullptr) ||
+			(node1 != node2 && node2 == nullptr))
+		{
+			return false;
+		}
+		else
+		{
+			return isSimilarTree(node1->left_, node2->left_) &&
+				node1->key_ == node2->key_ &&
+				isSimilarTree(node1->right_, node2->right_);
+		}
+	}
+
+	bool isSimilarKeys(Node* node1, Node* node2)
+	{
+		std::queue< Node* > nodes;
+
+		nodes.push(node2);
+
+		Node* current = nullptr;
+		while (nodes.empty() == false)
+		{
+			current = nodes.front();
+			nodes.pop();
+			if (current != nullptr)
+			{
+				if (iterativeSearch(current->key_) == true)
+				{
+					return true;
+				}
+				nodes.push(current->left_);
+				nodes.push(current->right_);
+			}
+		}
+		return false;
 	}
 };
 
@@ -446,7 +532,6 @@ template < class T >
 void BinarySearchTree< T >::iterativeInorderWalk() const
 {
 	iterativeInorderWalk(root_);
-	std::cout << "\n";
 }
 
 template < class T >
@@ -454,6 +539,24 @@ void BinarySearchTree< T >::inorderWalk() const
 {
 	inorderWalk(root_);
 	std::cout << "\n";
+}
+
+template < class T >
+void BinarySearchTree< T >::breadthWalk() const
+{
+	breadthWalk(root_);
+}
+
+template < class T >
+bool BinarySearchTree< T >::isSimilarTree(const BinarySearchTree< T >& other)
+{
+	return isSimilarTree(root_, other.root_);
+}
+
+template < class T >
+bool BinarySearchTree< T >::isSimilarKeys(const BinarySearchTree< T >& other)
+{
+	return isSimilarKeys(root_, other.root_);
 }
 
 #endif
